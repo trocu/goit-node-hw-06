@@ -11,7 +11,15 @@ const listContacts = async () => {
   }
 };
 
-const getContactById = async contactId => {};
+const getContactById = async contactId => {
+  try {
+    const parsedData = await listContacts();
+    const getContact = parsedData.find(contact => contact.id === contactId);
+    return getContact ?? { message: 'Not found' };
+  } catch (err) {
+    console.error(err.message);
+  }
+};
 
 const removeContact = async contactId => {};
 
