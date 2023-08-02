@@ -5,15 +5,13 @@ const {
   getContactById,
   addContact,
   removeContact,
+  updateContact,
 } = require('../../models/contacts');
+const { validateContact } = require('../../helpers/validator.js');
 
 router.get('/', async (req, res) => {
   const getContact = await listContacts();
   res.status(200).send(getContact);
-
-  // res.send(req.body);
-  // res.sendStatus(200);
-  // res.json({ message: 'template message' });
 });
 
 router.get('/:contactId', async (req, res) => {
@@ -23,31 +21,31 @@ router.get('/:contactId', async (req, res) => {
     return res.status(200).send(getContact);
   }
   res.status(404).send(getContact);
-  // res.json({ message: 'template message' });
 });
 
-router.post('/', async (req, res) => {
+router.post('/', validateContact, async (req, res) => {
   const { name, email, phone } = req.body;
-  if (name && email && phone) {
-    const pushContact = await addContact(name, email, phone);
-    return res.status(201).send(pushContact);
-  }
-  res.status(400).send({ message: 'missing required name - field' });
-  // res.json({ message: 'template message' });
+  const pushContact = await addContact(name, email, phone);
+  res.status(201).send(pushContact);
 });
 
 router.delete('/:contactId', async (req, res) => {
   const { contactId } = req.params;
   const deleteContact = await removeContact(contactId);
   if (deleteContact) {
-    return res.status(200).json(deleteContact);
+    return res.status(200).send(deleteContact);
   }
-  return res.status(404).json({ message: 'Not found' });
-  // res.json({ message: 'template message' });
+  res.status(404).send({ message: 'Not found' });
 });
 
-router.put('/:contactId', async (req, res, next) => {
-  res.json({ message: 'template message' });
+router.put('/:contactId', validateContact, async (req, res) => {
+  const { contactId } = req.params;
+  const { name, email, phone } = req.body;
+  const refreshContact = await updateContact(contactId, name, email, phone);
+  if (refreshContact) {
+    return res.status(200).send(refreshContact);
+  }
+  res.status(404).send({ message: 'Not found' });
 });
 
 module.exports = router;

@@ -34,15 +34,8 @@ const addContact = async (name, email, phone) => {
     if (parsedData.some(contact => contact.name.toLowerCase() === name.toLowerCase())) {
       return { message: `${name} is already in contacts!` };
     }
-    // console.log(newContacts);
     await fs.writeFile(contactsPath, JSON.stringify(newContacts, null, 2));
-    const rawData = await fs.readFile(contactsPath);
-    const data = JSON.parse(rawData);
-    const getContact = data.find(contact => contact.name === name);
-    return getContact;
-
-    // return result;
-    // return `Updated file successfully. ${name} has been added.`.green;
+    return newContacts.find(contact => contact.name === name);
   } catch (err) {
     console.error(err.message);
   }
@@ -63,7 +56,20 @@ const removeContact = async contactId => {
   }
 };
 
-const updateContact = async (contactId, body) => {};
+const updateContact = async (id, name, email, phone) => {
+  try {
+    const parsedData = await listContacts();
+    const index = parsedData.findIndex(contact => contact.id === id);
+    if (index !== -1) {
+      parsedData.splice(index, 1, { id, name, email, phone });
+      await fs.writeFile(contactsPath, JSON.stringify(parsedData, null, 2));
+      return parsedData[index];
+    }
+    return null;
+  } catch (err) {
+    console.error(err.message);
+  }
+};
 
 module.exports = {
   listContacts,
