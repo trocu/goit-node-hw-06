@@ -1,0 +1,18 @@
+const passport = require('passport');
+
+const auth = (req, res, next) => {
+  passport.authenticate('jwt', { session: false }, (err, user) => {
+    if (!user || err) {
+      return res.status(401).send({
+        status: 'error',
+        code: 401,
+        data: 'Unauthorized',
+        message: 'Not authorized',
+      });
+    }
+    req.user = user;
+    next();
+  })(req, res, next);
+};
+
+module.exports = { auth };
