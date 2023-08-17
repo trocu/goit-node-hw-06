@@ -36,16 +36,6 @@ const logoutUser = async id => {
   }
 };
 
-const currentUser = async id => {
-  try {
-    const result = await User.findOne({ _id: id });
-    return result;
-  } catch (err) {
-    console.error(err.message);
-    throw err;
-  }
-};
-
 const updateUserSubscription = async (id, subscription) => {
   const opts = {
     new: true,
@@ -60,4 +50,4 @@ const updateUserSubscription = async (id, subscription) => {
   }
 };
 
-module.exports = { registerUser, loginUser, logoutUser, currentUser, updateUserSubscription };
+module.exports = { registerUser, loginUser, logoutUser, updateUserSubscription };

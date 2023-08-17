@@ -60,18 +60,8 @@ const login = async (req, res, next) => {
 };
 
 const logout = async (req, res, next) => {
-  const { id } = req.body;
-  const user = await User.findOne({ _id: id }).lean();
-  if (!user) {
-    return res.status(401).send({
-      status: 'error',
-      code: 401,
-      data: 'Unauthorized',
-      message: 'Not authorized',
-    });
-  }
   try {
-    await userService.logoutUser(id);
+    await userService.logoutUser(req.body.id);
     res.status(204).end();
   } catch (error) {
     next(error);
@@ -79,13 +69,11 @@ const logout = async (req, res, next) => {
 };
 
 const current = async (req, res, next) => {
-  const { id } = req.body;
   try {
-    const result = await userService.currentUser(id);
     res.status(200).send({
       status: 'success',
       code: 200,
-      data: { email: result.email, subscription: result.subscription },
+      data: { email: req.user.email, subscription: req.user.subscription },
     });
   } catch (error) {
     next(error);
