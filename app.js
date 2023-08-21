@@ -11,6 +11,7 @@ const db = require('./infrastructure/db');
 app.use(logger(formatsLogger));
 app.use(cors());
 app.use(express.json());
+app.use(express.static('public'));
 
 require('./config/config-passport');
 const router = require('./api');

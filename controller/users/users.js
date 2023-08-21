@@ -1,6 +1,9 @@
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const jwt = require('jsonwebtoken');
+const gravatar = require('gravatar');
+const fs = require('fs').promises;
+const path = require('path');
 require('dotenv').config();
 const secret = process.env.SECRET;
 const { userService } = require('../../service');
@@ -9,6 +12,7 @@ const User = require('../../models/user');
 const register = async (req, res, next) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email }).lean();
+  const avatarURL = gravatar.url(email, { s: '200', r: 'g', d: 'monsterid' }, false);
   if (user) {
     return res.status(409).send({
       status: 'error',
@@ -19,7 +23,7 @@ const register = async (req, res, next) => {
   }
   try {
     const hash = await bcrypt.hash(password, saltRounds);
-    const result = await userService.registerUser(email, hash);
+    const result = await userService.registerUser(avatarURL, email, hash);
     res.status(201).send({
       status: 'success',
       code: 201,
@@ -103,4 +107,21 @@ const update = async (req, res, next) => {
   }
 };
 
-module.exports = { register, login, logout, current, update };
+const avatar = async (req, res, next) => {
+  const { path: temporaryName, originalname } = req.file;
+  const id = req.user._id.toString();
+  const idFileName = id + path.extname(originalname);
+  const storeImage = path.join(process.cwd(), 'public/avatars');
+  const fileName = path.join(storeImage, idFileName);
+  const avatarPath = path.join('/avatars', idFileName);
+  try {
+    await fs.rename(temporaryName, fileName);
+    const result = await userService.updateUserAvatar(id, avatarPath);
+    res.status(200).send({ avatarURL: result.avatarURL });
+  } catch (err) {
+    await fs.unlink(temporaryName);
+    return next(err);
+  }
+};
+
+module.exports = { register, login, logout, current, update, avatar };
