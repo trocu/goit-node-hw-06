@@ -8,7 +8,6 @@ const resizeImage = async (req, res, next) => {
   const image = await Jimp.read(imagePath);
   try {
     await image.resize(250, 250).write(path.join(uploadDir, originalname));
-    console.log('Image resized and saved successfully.');
     next();
   } catch (error) {
     next(error);
