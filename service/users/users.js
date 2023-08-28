@@ -1,8 +1,9 @@
 const User = require('../../models/user');
 
-const registerUser = async (email, password) => {
+const registerUser = async (avatarURL, email, password) => {
   try {
-    const parsedData = await User.create({ email, password });
+    const parsedData = await User.create({ avatarURL, email, password });
+    console.log(parsedData);
     return parsedData;
   } catch (err) {
     console.error(err.message);
@@ -50,4 +51,14 @@ const updateUserSubscription = async (id, subscription) => {
   }
 };
 
-module.exports = { registerUser, loginUser, logoutUser, updateUserSubscription };
+const updateUserAvatar = async (id, avatarURL) => {
+  try {
+    const result = await User.findOneAndUpdate({ _id: id }, { avatarURL });
+    return result;
+  } catch (err) {
+    console.error(err.message);
+    throw err;
+  }
+};
+
+module.exports = { registerUser, loginUser, logoutUser, updateUserSubscription, updateUserAvatar };
