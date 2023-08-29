@@ -6,8 +6,10 @@ const fs = require('fs').promises;
 const path = require('path');
 require('dotenv').config();
 const secret = process.env.SECRET;
+const { v4: uuidv4 } = require('uuid');
 const { userService } = require('../../service');
 const User = require('../../models/user');
+const { mailSg } = require('../../utils/verificationMail');
 
 const register = async (req, res, next) => {
   const { email, password } = req.body;
@@ -23,7 +25,9 @@ const register = async (req, res, next) => {
   }
   try {
     const hash = await bcrypt.hash(password, saltRounds);
-    const result = await userService.registerUser(avatarURL, email, hash);
+    const verificationToken = uuidv4();
+    const result = await userService.registerUser(avatarURL, email, hash, verificationToken);
+    mailSg(result.email, result.verificationToken);
     res.status(201).send({
       status: 'success',
       code: 201,
@@ -43,6 +47,13 @@ const login = async (req, res, next) => {
       code: 401,
       data: 'Unauthorized',
       message: 'Email or password is wrong',
+    });
+  } else if (!user.verify) {
+    return res.status(403).send({
+      status: 'error',
+      code: 403,
+      data: 'Forbidden',
+      message: 'Email not verified',
     });
   }
   try {
@@ -118,10 +129,33 @@ const avatar = async (req, res, next) => {
     await fs.rename(temporaryName, fileName);
     const result = await userService.updateUserAvatar(id, avatarPath);
     res.status(200).send({ avatarURL: result.avatarURL });
-  } catch (err) {
+  } catch (error) {
     await fs.unlink(temporaryName);
-    return next(err);
+    return next(error);
   }
 };
 
-module.exports = { register, login, logout, current, update, avatar };
+const verify = async (req, res, next) => {
+  const { verificationToken } = req.params;
+  const user = await User.findOne({ verificationToken });
+  if (!user) {
+    return res.status(404).send({
+      status: 'error',
+      code: 404,
+      data: 'Not Found',
+      message: 'User not found',
+    });
+  }
+  try {
+    await userService.updateVerificationStatus(verificationToken);
+    res.status(200).send({
+      status: 'success',
+      code: 200,
+      message: 'Verification successful',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { register, login, logout, current, update, avatar, verify };

@@ -1,8 +1,8 @@
 const User = require('../../models/user');
 
-const registerUser = async (avatarURL, email, password) => {
+const registerUser = async (avatarURL, email, password, verificationToken) => {
   try {
-    const parsedData = await User.create({ avatarURL, email, password });
+    const parsedData = await User.create({ avatarURL, email, password, verificationToken });
     console.log(parsedData);
     return parsedData;
   } catch (err) {
@@ -61,4 +61,28 @@ const updateUserAvatar = async (id, avatarURL) => {
   }
 };
 
-module.exports = { registerUser, loginUser, logoutUser, updateUserSubscription, updateUserAvatar };
+const updateVerificationStatus = async verificationToken => {
+  const opts = {
+    new: true,
+  };
+  try {
+    const result = await User.findOneAndUpdate(
+      { verificationToken },
+      { $set: { verificationToken: null, verify: true } },
+      opts
+    );
+    return result;
+  } catch (err) {
+    console.error(err.message);
+    throw err;
+  }
+};
+
+module.exports = {
+  registerUser,
+  loginUser,
+  logoutUser,
+  updateUserSubscription,
+  updateUserAvatar,
+  updateVerificationStatus,
+};
