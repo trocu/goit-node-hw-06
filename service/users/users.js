@@ -3,7 +3,6 @@ const User = require('../../models/user');
 const registerUser = async (avatarURL, email, password, verificationToken) => {
   try {
     const parsedData = await User.create({ avatarURL, email, password, verificationToken });
-    console.log(parsedData);
     return parsedData;
   } catch (err) {
     console.error(err.message);

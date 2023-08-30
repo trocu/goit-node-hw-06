@@ -41,7 +41,7 @@ const register = async (req, res, next) => {
 const login = async (req, res, next) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email }).lean();
-  if (!user || !bcrypt.compare(password, user.password)) {
+  if (!user || !(await bcrypt.compare(password, user.password))) {
     return res.status(401).send({
       status: 'error',
       code: 401,
@@ -158,4 +158,34 @@ const verify = async (req, res, next) => {
   }
 };
 
-module.exports = { register, login, logout, current, update, avatar, verify };
+const resend = async (req, res, next) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email }).lean();
+  if (!user) {
+    return res.status(404).send({
+      status: 'error',
+      code: 404,
+      data: 'Not Found',
+      message: 'User not found',
+    });
+  } else if (user.verify) {
+    return res.status(403).send({
+      status: 'error',
+      code: 400,
+      data: 'Bad Request',
+      message: 'Verification has already been passed',
+    });
+  }
+  try {
+    mailSg(user.email, user.verificationToken);
+    res.status(200).send({
+      status: 'success',
+      code: 200,
+      message: 'Verification email sent',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { register, login, logout, current, update, avatar, verify, resend };
