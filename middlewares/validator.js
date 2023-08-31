@@ -10,6 +10,10 @@ const userSubscriptionSchema = Joi.object({
   subscription: Joi.string().valid('starter', 'pro', 'business').required(),
 });
 
+const resendEmailSchema = Joi.object({
+  email: Joi.string().email({ minDomainSegments: 2 }).required(),
+});
+
 const validateContact = (req, res, next) => {
   const { error } = schema.validate(req.body);
   if (error) {
@@ -36,4 +40,17 @@ const validateUser = (req, res, next) => {
   next();
 };
 
-module.exports = { validateContact, validateUser };
+const validateResend = (req, res, next) => {
+  const { error } = resendEmailSchema.validate(req.body);
+  if (error) {
+    return res.status(400).send({
+      status: 'error',
+      code: 400,
+      data: 'Bad Request',
+      message: `ValidationError: ${error.details[0].context.label} is required`,
+    });
+  }
+  next();
+};
+
+module.exports = { validateContact, validateUser, validateResend };
